@@ -53,6 +53,9 @@ XML data define demo
 </xml>
 ```
 
+The result:
+
+![all](https://ishop-static-qn.inruan.com/Fn19wIxf7lcQIX_19OB-BIa_Kg8X.png)
 
 
 Usage
@@ -88,5 +91,8 @@ p = Serial(devfile='/dev/tty.usbserial',
 p._raw(ep.get_data())
 ```
 
+The result:
+
+![t2](https://ishop-static-qn.inruan.com/FrHhC5sGxYWS9ElyUOHgtf0xTxtD.png)
 
 [Click to view more information!](https://github.com/sintrb/oneprint)
