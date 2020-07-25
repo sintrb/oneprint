@@ -1,0 +1,35 @@
+<xml>
+    <!-- text -->
+    <text>oneprint is a uniform print library, support ESC/POS printer.</text>
+    <!-- table -->
+    <table border="1">
+        <tr border="1">
+            <th colspan="3" align="center" width="8">Title</th>
+        </tr>
+        <tr border="1">
+            <th align="center" width="8">Time</th>
+            <th align="center" width="20">Content</th>
+            <th align="center" width="20">Remark</th>
+        </tr>
+        <tr border="1">
+            <td>18:00</td>
+            <td>This is content field! Just test!</td>
+            <td align="center">Empty</td>
+        </tr>
+        <tr border="1">
+            <td>19:00</td>
+            <td colspan="2">Content 2</td>
+        </tr>
+    </table>
+    <text>A Image</text>
+    <!-- image -->
+    <img align="center" src="https://img3.doubanio.com/dae/accounts/resources/527f922/sns/assets/lg_main@2x.png"/>
+    <text>A Qrcode</text>
+    <!-- qrcode -->
+    <qrcode align="center">Hello</qrcode>
+    <text>A Barcode</text>
+    <!-- ean13 barcode -->
+    <barcode align="center" type="ean13">123456789012</barcode>
+    <!-- cur the page -->
+    <cut/>
+</xml>
