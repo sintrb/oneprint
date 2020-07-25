@@ -24,5 +24,16 @@ def do_all_test():
         pt.show()
 
 
+def do_usb_test():
+    from escpos.printer import Usb
+    import io
+    pt = EscPosPrint(encode='gb2312', temp_path='/tmp/print', width=576)
+    with io.open('test/all.xml', 'r', encoding='utf8') as f:
+        pt.auto_print(f.read())
+        p = Usb(0x6868, 0x0500, in_ep=0x84, out_ep=0x3)
+        p._raw(pt.get_data())
+        p.close()
+
+
 if __name__ == '__main__':
     do_all_test()

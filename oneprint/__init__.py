@@ -4,7 +4,7 @@ Created on 2020-07-10
 '''
 from __future__ import print_function
 
-__version__ = '1.0.0'
+__version__ = '1.0.6'
 
 CHAR_V_LINE = '|'
 CHAR_H_LINE = '-'
@@ -51,6 +51,48 @@ def get_node_text(node):
     if node.childNodes:
         text = node.childNodes[0].data
     return text
+
+
+def get_barcode_image(code, codetype='ean13'):
+    from PIL import Image
+    from io import BytesIO
+    from pystrich.code128 import Code128Encoder
+    from pystrich.ean13 import EAN13Encoder
+    from pystrich.code39 import Code39Encoder
+    codermap = {
+        'code128': lambda code: Code128Encoder(code, options={'height': 100}),
+        'ean13': lambda code: EAN13Encoder(code),
+        'code39': lambda code: Code39Encoder(code, options={'height': 100}),
+    }
+    codetype = codetype.lower()
+    if codetype not in codermap:
+        import warnings
+        warnings.warn('unsupported barcode type "%s"' % (codetype))
+    else:
+        encoder = codermap[codetype](code)
+        img = Image.open(BytesIO(encoder.get_imagedata(4)))
+        return img
+
+
+def get_qrcode_image(code, size=10):
+    import qrcode
+    img = qrcode.make(code, box_size=size).get_image()
+    return img
+
+
+def align_image(img, width, align='left'):
+    from PIL import Image
+    iw, ih = img.size
+    if iw > width:
+        img = img.resize((width, int(float(width) * ih / iw)))
+    if iw < width and align in ['center', 'right']:
+        nimg = Image.new('RGB', (width, ih), (255, 255, 255))
+        x = width - iw
+        if align == 'center':
+            x = int(x / 2)
+        nimg.paste(img, (x, 0), mask=img if img.mode == 'RGBA' else None)
+        img = nimg
+    return img
 
 
 class BasePrint(object):
@@ -364,16 +406,39 @@ class EscPosPrint(BasePrint):
         src = get_node_attr(node, 'src', '')
         path = self.get_url_to_path(src)
         if path:
-            self.dummy.image(path)
+            from PIL import Image
+            img = Image.open(path)
+            img = align_image(img, self.width, get_node_attr(node, 'align', 'left'))
+            self.dummy.image(img)
 
     def handle_img(self, node):
         self.handle_image(node)
 
     def handle_qrcode(self, node):
-        self.dummy.qr(get_node_text(node), size=get_node_attr_int(node, 'size', 5), native=get_node_attr(node, 'native', 'False').upper() == 'TRUE')
+        native = get_node_attr(node, 'native', 'False').upper() == 'TRUE'
+        code = get_node_text(node)
+        size = get_node_attr_int(node, 'size', 5)
+        if not native:
+            img = get_qrcode_image(code, size=size)
+            img = align_image(img, self.width, get_node_attr(node, 'align', 'left'))
+            self.dummy.image(img)
+        else:
+            self.dummy.qr(code, size=size, native=native)
 
     def handle_barcode(self, node):
-        self.dummy.barcode(get_node_text(node), get_node_attr(node, 'type', 'EAN13').upper(), font=get_node_attr(node, 'font', 'A').upper(), pos=get_node_attr(node, 'pos', 'OFF').upper(), function_type=get_node_attr(node, 'function', 'B').upper())
+        native = get_node_attr(node, 'native', 'False').upper() == 'TRUE'
+        codetype = get_node_attr(node, 'type', 'EAN13').lower()
+        code = get_node_text(node)
+        if not native:
+            import qrcode
+            img = get_barcode_image(code, codetype=codetype)
+            img = align_image(img, self.width, get_node_attr(node, 'align', 'left'))
+            self.dummy.image(img)
+        else:
+            self.dummy.barcode(code, codetype.upper(), font=get_node_attr(node, 'font', 'A').upper(), pos=get_node_attr(node, 'pos', 'BELOW').upper(), function_type=get_node_attr(node, 'function', 'B').upper())
+
+    def handle_beep(self, node):
+        self.dummy._raw(b'\x1B\x42\x01\x01')
 
     def raw_send(self, msg):
         self.dummy._raw(msg)
@@ -468,7 +533,7 @@ class ImageDrawPrint(BasePrint):
                 self._adjust_height(self._get_char_width(CHAR_BLANK) * 2)
             if self.pos_x + cw > self.width:
                 self._next_line()
-            self.draw.text((self.padding_x + self.pos_x, self.padding_y + self.pos_y), c, font=self.fontmap[self.font], fill="#000000", spacing=0, align='left')
+            self.draw.text((self.padding_x + self.pos_x, self.padding_y + self.pos_y), c, font=self.fontmap[self.font], fill="#000000")
             self.pos_x += cw
 
     def _next_line(self):
@@ -480,7 +545,7 @@ class ImageDrawPrint(BasePrint):
         from PIL import Image
         if img.mode == 'RGBA':
             nimg = Image.new('RGB', size=img.size, color=(255, 255, 255))
-            nimg.paste(img, (0, 0), mask=img)
+            nimg.paste(img, (0, 0), mask=img if img.mode == 'RGBA' else None)
             img = nimg.convert('RGB')
         if self.pos_x > 0:
             self._next_line()
@@ -508,35 +573,21 @@ class ImageDrawPrint(BasePrint):
         self.handle_image(node)
 
     def handle_qrcode(self, node):
-        import qrcode
-
-        text = get_node_text(node)
-        img = qrcode.make(text)
+        code = get_node_text(node)
+        size = get_node_attr_int(node, 'size', 5)
+        img = get_qrcode_image(code, size)
         self._pase_image(img, get_node_attr(node, 'align', 'center'))
 
     def handle_cut(self, node):
         self.print_text(self._repeat_to_width(' >> ', self.width) + '\n')
 
     def handle_barcode(self, node):
-        from PIL import Image
-        from io import BytesIO
-        from pystrich.code128 import Code128Encoder
-        from pystrich.ean13 import EAN13Encoder
-        from pystrich.code39 import Code39Encoder
         codetype = get_node_attr(node, 'type', 'ean13').lower()
-        codermap = {
-            'code128': Code128Encoder,
-            'ean13': EAN13Encoder,
-            'code39': Code39Encoder,
-        }
         code = get_node_text(node)
-        if codetype not in codermap:
-            import warnings
-            warnings.warn('unsupported barcode type "%s": %s' % (codetype, node.toxml()))
+        img = get_barcode_image(code, codetype=codetype)
+        if not img:
             self.print_text('unsupported barcode %s\n%s\n' % (codetype.upper(), code))
         else:
-            encoder = codermap[codetype](code)
-            img = Image.open(BytesIO(encoder.get_imagedata()))
             self._pase_image(img, get_node_attr(node, 'align', 'center'))
 
     def get_image(self, mode='L'):

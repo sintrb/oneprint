@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xml>
+    <!--<text>Hell</text>-->
+    <img align="center" src="https://img3.doubanio.com/dae/accounts/resources/527f922/sns/assets/lg_main@2x.png"/>
+    <qrcode native="x" align="left">123456789012</qrcode>
+    <!--<barcode native="true" align="left">123456789012</barcode>-->
+    <!--<barcode xnative="true" align="left">123456789012</barcode>-->
+    <!--<beep></beep>-->
+</xml>
