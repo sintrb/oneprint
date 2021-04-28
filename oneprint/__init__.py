@@ -4,7 +4,7 @@ Created on 2020-07-10
 '''
 from __future__ import print_function
 
-__version__ = '1.2.0'
+__version__ = '1.2.4'
 
 CHAR_V_LINE = '|'
 CHAR_H_LINE = '-'
@@ -310,10 +310,11 @@ class BasePrint(object):
 
     def handle_hr(self, node):
         border = get_node_attr_int(node, 'border', 1)
+        char = get_node_attr(node, 'char', CHAR_H_LINE)
         if border and self.width:
             ix = 0
             while ix < border:
-                self.print_text(self._repeat_to_width(CHAR_H_LINE, self.width) + '\n')
+                self.print_text(self._repeat_to_width(char, self.width) + '\n')
                 ix += 1
 
     def _handle_node(self, node):
@@ -334,6 +335,9 @@ class BasePrint(object):
             node = dom.childNodes[0]
         else:
             node = dom
+        width = get_node_attr_int(node, 'width', 0)
+        if width != 0:
+            self.width = width
         for e in filter_elements(node.childNodes):
             self._handle_node(e)
 
@@ -465,27 +469,47 @@ class ImageDrawPrint(BasePrint):
     sizemap = None
     setd = {}
 
-    def __init__(self, padding=10, width=576, sizemap=None, font='A', **kwargs):
+    def __init__(self, padding=10, width=576, sizemap=None, font='A', fontmap=None, **kwargs):
         BasePrint.__init__(self, width=width, **kwargs)
         from PIL import Image, ImageDraw, ImageFont
         self.padding_y = self.padding_x = padding
-        width = padding * 2 + self.width
-        height = self.padding_y * 2
-        self.image = Image.new('RGB', (width, height), (255, 255, 255))
         fontUrl = 'https://cdn-qn.huaeb.com/sellmall/20200725/lhG8Zyft2V5pLmcTpKAsyV9jnjAO.ttf'
         if not sizemap:
             sizemap = {
                 'A': 24,
                 'B': 16,
             }
+        if not fontmap:
+            fontmap = {}
         self.font = font
         self.sizemap = sizemap
         self.fontmap = {
-            k: ImageFont.truetype(self.get_url_to_path(fontUrl), v)
+            k: ImageFont.truetype(self.get_url_to_path(fontmap.get(k) or fontUrl), v)
             for k, v in self.sizemap.items()
         }
-        self.draw = ImageDraw.Draw(self.image)
         self.texts = []
+
+    _draw = None
+    _image = None
+
+    def init_image(self):
+        from PIL import Image, ImageDraw, ImageFont
+        width = self.padding_x * 2 + self.width
+        height = self.padding_y * 2
+        self._image = Image.new('RGB', (width, height), (255, 255, 255))
+        self._draw = ImageDraw.Draw(self.image)
+
+    @property
+    def image(self):
+        if not self._image:
+            self.init_image()
+        return self._image
+
+    @property
+    def draw(self):
+        if not self._draw:
+            self.init_image()
+        return self._draw
 
     def _set_with_node(self, node):
         font = get_node_attr(node, 'font', '')
@@ -536,7 +560,7 @@ class ImageDrawPrint(BasePrint):
                     lw = int((cwidth - tw) / 2)
                     rw = cwidth - tw - lw
                 t = self._repeat_to_width(CHAR_BLANK, lw * bw) + text + self._repeat_to_width(CHAR_BLANK, rw * bw)
-                rs.append(t)
+                rs.append(t + '\n')
         return rs
 
     def handle_text(self, node):
@@ -557,8 +581,8 @@ class ImageDrawPrint(BasePrint):
             nh = mh + h * 5
             nimg = Image.new('RGB', (iw, nh), (255, 255, 255))
             nimg.paste(self.image, (0, 0, iw, ih))
-            self.image = nimg
-            self.draw = ImageDraw.Draw(self.image)
+            self._image = nimg
+            self._draw = ImageDraw.Draw(self.image)
 
     def print_text(self, text):
         self.texts.append(text)

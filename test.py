@@ -62,7 +62,7 @@ def do_usb_test2():
 
 
 if __name__ == '__main__':
-    do_table_test()
+    # do_table_test()
     do_all_test()
     # do_usb_test()
     # do_usb_test()

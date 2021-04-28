@@ -1,0 +1,23 @@
+<!-- define a paper -->
+<xml width="384|576|...">
+    <!-- show text -->
+    <text align="left|right|center" font="A|B">Hello</text>
+    <!-- show a horizontal line -->
+    <hr char="-|*|+..."/>
+    <!--  show image  -->
+    <img align="left|right|center" src="https://xxx"/>
+    <!--  show QRCode  -->
+    <qrcode native="false|true" align="left|right|center">Hello</qrcode>
+    <!--  show barcode  -->
+    <barcode align="left|right|center" type="code128|ean13">123456789012</barcode>
+
+    <!--  show table  -->
+    <table border="1|2|3...">
+        <tr border="1|2|3...">
+            <td align="center" colspan="1|2|3..." width="1|2|3...">Time</td>
+            <td align="center" width="1|2|3...">Content</td>
+            <td align="center" width="1|2|3...">Remark</td>
+        </tr>
+    </table>
+</xml>
+

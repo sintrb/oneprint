@@ -1,57 +1,17 @@
-<xml>
-    <hr></hr>
-    <table>
+<xml width="384">
+    <!-- 缴费订单小票 -->
+    <text></text>
+    <text></text>
+    <text align="center">昆明斗南花卉管理有限公司收款单</text>
+    <table font="B">
         <tr>
-            <th align="center" width="8">时间</th>
-            <th align="center" width="20">内容</th>
-            <th align="center" width="20">备注</th>
-        </tr>
-        <hr/>
-        <tr>
-            <td>18:00</td>
-            <td>这里是hi内容哈哈好,对的呢。</td>
-            <td align="center">空</td>
-        </tr>
-        <tr>
-            <td>19:00</td>
-            <td>是W3C组织推荐的处理可扩展置标语言的标准编程接口</td>
-            <td align="center">好</td>
-        </tr>
-        <hr/>
-    </table>
-        <table border="1">
-            <tr border="1">
-                <th align="center" width="8">时间</th>
-                <th align="center" width="20">内容</th>
-                <th align="center" width="20">备注</th>
-            </tr>
-            <tr border="1">
-                <td>18:00</td>
-                <td>这里是hi内容哈哈好,对的呢。</td>
-                <td align="center">空</td>
-            </tr>
-            <tr border="1">
-                <td>19:00</td>
-                <td>是W3C组织推荐的处理可扩展置标语言的标准编程接口</td>
-                <td align="center">好</td>
-            </tr>
-        </table>
-    <table border="1" font="B">
-        <tr border="1">
-            <th align="center" width="8">时间</th>
-            <th align="center" width="20">内容</th>
-            <th align="center" width="20">备注</th>
-        </tr>
-        <tr border="1">
-            <td>18:00</td>
-            <td>这里是hi内容哈哈好,对的呢。</td>
-            <td align="center">空</td>
-        </tr>
-        <tr border="1">
-            <td>19:00</td>
-            <td>是W3C组织推荐的处理可扩展置标语言的标准编程接口</td>
-            <td align="center">好</td>
+            <td>缴费日期:AAADDDDDDD</td>
+            <td align="right">NO:BBB</td>
         </tr>
     </table>
+
+    <text></text>
+    <text></text>
+    <text></text>
     <cut/>
 </xml>
