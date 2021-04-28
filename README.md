@@ -18,8 +18,17 @@ XML data define demo
 ```xml
 <xml>
     <!-- text -->
-    <text>oneprint is a uniform print library, support ESC/POS printer.</text>
+    <text align="center">oneprint is a uniform print library, support ESC/POS printer.</text>
     <!-- table -->
+    <hr/>
+    <text/>
+    <table>
+        <tr>
+            <td align="left">日期:2021-04-28</td>
+            <td align="right">编号:0001</td>
+        </tr>
+    </table>
+    <text/>
     <table border="1">
         <tr border="1">
             <th colspan="3" align="center" width="8">Title</th>
@@ -55,7 +64,7 @@ XML data define demo
 
 The result:
 
-![all](https://ishop-static-qn.inruan.com/Fn19wIxf7lcQIX_19OB-BIa_Kg8X.png)
+![all](https://ishop-static-qn.inruan.com/FghMcvEJ_CYgQuFr1LncW8ewqOBf.png)
 
 
 Usage

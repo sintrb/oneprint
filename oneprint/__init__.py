@@ -4,7 +4,7 @@ Created on 2020-07-10
 '''
 from __future__ import print_function
 
-__version__ = '1.0.6'
+__version__ = '1.2.0'
 
 CHAR_V_LINE = '|'
 CHAR_H_LINE = '-'
@@ -223,6 +223,10 @@ class BasePrint(object):
                 tab_br()
                 ix += 1
         for tr in eletrs:
+            if tr.tagName.lower() == 'hr':
+                tab_output(self._repeat_to_width(CHAR_H_LINE, tabw))
+                tab_br()
+                continue
             check_tag(tr, 'tr')
             eletds = filter_elements(tr.childNodes)
             maxlns = 0
@@ -459,6 +463,7 @@ class ImageDrawPrint(BasePrint):
     pos_x = 0
     font = 'A'
     sizemap = None
+    setd = {}
 
     def __init__(self, padding=10, width=576, sizemap=None, font='A', **kwargs):
         BasePrint.__init__(self, width=width, **kwargs)
@@ -498,12 +503,47 @@ class ImageDrawPrint(BasePrint):
             setd['height'] = size
         if text_type:
             setd['text_type'] = text_type
+        self.setd = setd
 
     def _handle_node(self, node):
         tag = node.tagName.lower()
         if tag in ['table', 'text', 'td', 'tr']:
             self._set_with_node(node)
         BasePrint._handle_node(self, node)
+
+    def _fill_with_width(self, text, width, align):
+        if not text:
+            return []
+        elif text == '\n':
+            return ['\n']
+        rs = []
+        for text in text.replace('\r\n', '\n').split('\n'):
+            ts = self._split_with_width(text, width=width)
+            for text in ts:
+                bw = self._get_char_width(CHAR_BLANK)
+                tw = int(self._get_line_width(text) / bw)
+                cwidth = int(width / bw)
+                lw = 0
+                rw = 0
+                if align == 'right':
+                    # 左对齐
+                    lw = cwidth - tw
+                elif align == 'left':
+                    # 左对齐
+                    rw = cwidth - tw
+                else:
+                    # 居中
+                    lw = int((cwidth - tw) / 2)
+                    rw = cwidth - tw - lw
+                t = self._repeat_to_width(CHAR_BLANK, lw * bw) + text + self._repeat_to_width(CHAR_BLANK, rw * bw)
+                rs.append(t)
+        return rs
+
+    def handle_text(self, node):
+        content = get_node_text(node) + '\n'
+        align = self.setd.get('align') or 'left'
+        for text in self._fill_with_width(content, width=self.width, align=align):
+            self.print_text(text)
 
     def _get_char_width(self, c):
         w = BasePrint._get_char_width(self, c)
