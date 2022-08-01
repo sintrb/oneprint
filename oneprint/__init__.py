@@ -272,6 +272,8 @@ class BasePrint(object):
 
     def get_url_to_path(self, url):
         import tempfile, os, requests
+        if os.path.exists(url):
+            return url
         fnd = calc_md5(url)
         if self._temp_path == None:
             self._temp_path = tempfile.mkdtemp(prefix='urlcache-')
