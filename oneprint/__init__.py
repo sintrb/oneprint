@@ -4,7 +4,7 @@ Created on 2020-07-10
 '''
 from __future__ import print_function
 
-__version__ = '1.2.4'
+__version__ = '1.3.0'
 
 CHAR_V_LINE = '|'
 CHAR_H_LINE = '-'
@@ -361,7 +361,21 @@ class EscPosPrint(BasePrint):
     def __init__(self, encode=None, **kwargs):
         BasePrint.__init__(self, **kwargs)
         from escpos.printer import Dummy
-        self.dummy = Dummy()
+        class SafeDummy(Dummy):
+            def text(self, txt):
+                if txt:
+                    if self.codepage in ['gb2312', 'gbk']:
+                        try:
+                            import zhconv
+                            txt = zhconv.convert(txt, 'zh-hans')
+                        except:
+                            pass
+                    if self.codepage:
+                        self._raw(txt.encode(self.codepage, errors='ignore'))
+                    else:
+                        self._raw(txt.encode(errors='ignore'))
+
+        self.dummy = SafeDummy()
         if encode:
             self.dummy.codepage = encode
         self.dummy.hw('init')
@@ -394,11 +408,11 @@ class EscPosPrint(BasePrint):
         if align:
             setd['align'] = align
         if size:
-            setd['width'] = size
-            setd['height'] = size
+            setd['height'] = setd['width'] = max(1, min(8, int(size / 12)))
         if text_type:
             setd['text_type'] = text_type
         if setd:
+            print(setd)
             self.dummy.set(**setd)
 
     def _handle_node(self, node):
@@ -465,18 +479,18 @@ class ImageDrawPrint(BasePrint):
     '''
     pos_y = 0
     pos_x = 0
-    font = 'A'
+    font = 'B'
     sizemap = None
     setd = {}
 
-    def __init__(self, padding=10, width=576, sizemap=None, font='A', fontmap=None, **kwargs):
+    def __init__(self, padding=10, width=576, sizemap=None, font='B', fontmap=None, **kwargs):
         BasePrint.__init__(self, width=width, **kwargs)
         from PIL import Image, ImageDraw, ImageFont
         self.padding_y = self.padding_x = padding
         fontUrl = 'https://cdn-qn.huaeb.com/sellmall/20200725/lhG8Zyft2V5pLmcTpKAsyV9jnjAO.ttf'
         if not sizemap:
             sizemap = {
-                'A': 24,
+                'A': 34,
                 'B': 16,
             }
         if not fontmap:
@@ -517,6 +531,8 @@ class ImageDrawPrint(BasePrint):
         size = get_node_attr_int(node, 'size', 0)
         text_type = 'B' if get_node_attr(node, 'bold', '') else '' + 'U' if get_node_attr(node, 'underline', '') else ''
         setd = {}
+        if not font:
+            font = 'A' if size == 24 else 'B'
         if font:
             setd['font'] = font
             self.font = font
@@ -528,6 +544,7 @@ class ImageDrawPrint(BasePrint):
         if text_type:
             setd['text_type'] = text_type
         self.setd = setd
+        self.font = font
 
     def _handle_node(self, node):
         tag = node.tagName.lower()
@@ -586,6 +603,7 @@ class ImageDrawPrint(BasePrint):
 
     def print_text(self, text):
         self.texts.append(text)
+        font = self.setd.get('font', self.font)
         for c in text:
             if c == '\r':
                 continue
@@ -597,7 +615,7 @@ class ImageDrawPrint(BasePrint):
                 self._adjust_height(self._get_char_width(CHAR_BLANK) * 2)
             if self.pos_x + cw > self.width:
                 self._next_line()
-            self.draw.text((self.padding_x + self.pos_x, self.padding_y + self.pos_y), c, font=self.fontmap[self.font], fill="#000000")
+            self.draw.text((self.padding_x + self.pos_x, self.padding_y + self.pos_y), c, font=self.fontmap[font], fill="#000000")
             self.pos_x += cw
 
     def _next_line(self):
@@ -661,7 +679,7 @@ class ImageDrawPrint(BasePrint):
         iw = rw
         ih = self.padding_y * 2 + self.pos_y
         if self.pos_x:
-            ih = ih + self._get_char_width(CHAR_BLANK)
+            ih = ih + self._get_char_width(CHAR_BLANK) * 2
         nimg = Image.new('RGB', size=(iw, ih), color=(255, 255, 255))
         nimg.paste(img, (0, 0, rw, rh))
         if nimg.mode != mode:
